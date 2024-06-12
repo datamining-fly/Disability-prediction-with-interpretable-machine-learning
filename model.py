@@ -1,16 +1,16 @@
-# Load the data used in this study
+# Load data
 import numpy as np
 import pandas as pd
-data=pd.read_csv('C:/Users/shiny/Desktop/data/data.csv')
+data=pd.read_csv('C:/Users/shiny/Desktop/data_file/data.csv')
 
-# Split data into train and test sets with stratified randomization
+# Split data with stratified randomization
 X=data.iloc[:,0:-1]
 y=data.iloc[:,44]
 from sklearn.model_selection import train_test_split
 X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.3,stratify=y,shuffle=True,random_state=42)
 X_train_,X_validation,y_train_,y_validation=train_test_split(X_train,y_train,test_size=0.3,stratify=y_train,shuffle=True,random_state=42)
 
-# Scale the predictors with MinMaxScaler
+# Scale predictors with MinMaxScaler
 from sklearn.preprocessing import MinMaxScaler
 scaler=MinMaxScaler()
 X_train_scaler=scaler.fit_transform(X_train)
@@ -18,11 +18,12 @@ X_train_scaler_=scaler.transform(X_train_)
 X_validation_scaler=scaler.transform(X_validation)
 X_test_scaler=scaler.transform(X_test)
 
-# Select the optimal threshold with 10-fold CV
+# Select optimal threshold
 from sklearn.ensemble import RandomForestClassifier
 rf=RandomForestClassifier(random_state=42)
 rf.fit(X_train_,y_train_)
 y_pred_validation_proba=rf.predict_proba(X_validation)
+
 def Find_Optimal_Cutoff(TPR, FPR, threshold):
     y = TPR - FPR
     Youden_index = np.argmax(y)  # Only the first occurrence is returned.
@@ -79,7 +80,7 @@ specificity=cm[0,0]/(cm[0,0]+cm[0,1])
 f1=f1_score(y_test,y_pred_list)
 
 print('balanced-accuracy:',baccuracy)
-print('recall:',sensitivity) 
+print('sensitivity:',sensitivity) 
 print('specificity:',specificity)
 print('F1-score:',f1)
 
@@ -94,8 +95,4 @@ shap_values = shap.TreeExplainer(rf).shap_values(X_test_scaler)
 %matplotlib inline
 %config InlineBackend.figure_format='svg'
 shap.plots.violin(shap_values[:,:,1], features=X_test_scaler, feature_names=X_test.columns, plot_type="layered_violin",max_display=20)
-
-import matplotlib.pyplot as plt
-fig=shap.summary_plot(shap_values[:,:,1],X_test_scaler,plot_type='bar',
-                  feature_names=X_test.columns,max_display=44,show=False)
-plt.savefig('C:/Users/shiny/Desktop/BADL失能预测/SHAP-Bar.jpg',dpi=900,bbox_inches='tight')
+shap.summary_plot(shap_values[:,:,1],X_test_scaler,plot_type='bar',feature_names=X_test.columns,max_display=44,show=False)
